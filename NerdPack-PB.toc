@@ -1,6 +1,6 @@
 ## Title: |r[|cff0070deNerdPack|r] BattlePet Bot
 ## Notes: A plugin for NerdPack.
-## Dependencies: NerdPack
+## Dependencies: NerdPack-Protected
 ## Interface: 60200
 ## Author: MrTheSoulz
 
