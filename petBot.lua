@@ -1,5 +1,5 @@
-NeP.Interface.CreatePlugin('BattlePet Bot', function() NeP.Interface.ShowGUI('NePpetBot') end)
-
+local n_name, pB = ...
+pB.Version = 1
 local Fetch = NeP.Interface.fetchKey
 local C_PB = C_PetBattles
 local C_PJ = C_PetJournal
@@ -12,15 +12,13 @@ DESC: Gets returned to PEs build GUI to create it.
 Build By: MTS
 ---------------------------------------------------]]
 local config = {
-	key = "NePpetBot",
-	profiles = true,
-	title = '|T'..NeP.Interface.Logo..':10:10|t'.." "..NeP.Info.Name,
-	subtitle = "PetBot Settings",
-	color = NeP.Interface.addonColor,
-	width = 250,
-	height = 300,
+	key = n_name,
+	title = n_name,
+	subtitle = 'Settings',
+	width = 200,
+	height = 500,
 	config = {
-		{ type = 'header', text = '|cff'..NeP.Interface.addonColor.."Settings:", size = 25, align = "Center"},
+		{ type = 'header', text = "Settings:", size = 25, align = "Center"},
 		{ type = 'spacer' },
 			{ type = "spinner", text = "Change Pet at Health %:", key = "swapHealth", width = 70, min = 10, max = 100, default = 25, step = 1 },
 			{ type = "checkbox", text = "Auto Trap", key = "trap", default = false },
@@ -30,37 +28,35 @@ local config = {
 				{ text = "Leveling Team", key = "LvlngTeam" },
 			}, default = "BattleTeam" },
 		{ type = 'rule' },{ type = 'spacer' },
-		{ type = 'header', text = '|cff'..NeP.Interface.addonColor.."Status:", size = 25, align = "Center"},
+		{ type = 'header', text = "Status:", size = 25, align = "Center"},
 		{ type = 'spacer' },
 			-- Pet Slot 1
-			{ type = "text", text = "|cff"..NeP.Interface.addonColor.."Pet in slot 1: ", size = 11, offset = -11 },
+			{ type = "text", text = "Pet in slot 1: ", size = 11, offset = -11 },
 			{ key = 'petslot1', type = "text", text = "...", size = 11, align = "right", offset = 0 },
 			-- Pet Slot 2
-			{ type = "text", text = "|cff"..NeP.Interface.addonColor.."Pet in slot 2: ", size = 11, offset = -11 },
+			{ type = "text", text = "Pet in slot 2: ", size = 11, offset = -11 },
 			{ key = 'petslot2', type = "text", text = "...", size = 11, align = "right", offset = 0 },
 			-- Pet Slot 3
-			{ type = "text", text = "|cff"..NeP.Interface.addonColor.."Pet in slot 3: ", size = 11, offset = -11 },
+			{ type = "text", text = "Pet in slot 3: ", size = 11, offset = -11 },
 			{ key = 'petslot3', type = "text", text = "...", size = 11, align = "right", offset = 0 },
 			{ type = 'spacer' },
 			-- Last attack
-			{ type = "text", text = "|cff"..NeP.Interface.addonColor.."Last Used Attack: ", size = 11, offset = -11 },
+			{ type = "text", text = "Last Used Attack: ", size = 11, offset = -11 },
 			{ key = 'lastAttack', type = "text", text = "...", size = 11, align = "right", offset = 0 },
 		{ type = 'spacer' },{ type = 'rule' },{ type = 'spacer' },
 			{ type = "button", text = "Start", width = 225, height = 20,callback = function(self, button)
 					isRunning = not isRunning
-					if isRunning then
-						self:SetText("Stop")
-					else
-						self:SetText("Start")
-					end
+						self:SetText(isRunning and "Stop" or "Start")
 				end
 			},
 	}	
 }
 
-NeP.Interface.buildGUI(config)
+-- Create the GUI and add it to NeP
+pB.GUI = NeP.Interface:BuildGUI(config)
+NeP.Interface:Add(n_name..' V:'..pB.Version, function() pB.GUI:Show() end)
+pB.GUI:Hide()
 
-local petBotGUI = NeP.Interface.getGUI('NePpetBot')
 local maxPetLvl = 0
 
 local function getPetHealth(owner, index)
@@ -224,7 +220,7 @@ local function PetAttack()
 end
 
 C_Timer.NewTicker(0.5, (function()
-	if petBotGUI.parent:IsShown() then
+	if pB.GUI:IsShown() then
 		local activePet = C_PB.GetActivePet(1)
 		local enemieActivePet = C_PB.GetActivePet(2)
 		
