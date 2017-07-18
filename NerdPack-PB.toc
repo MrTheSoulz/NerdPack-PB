@@ -4,4 +4,5 @@
 ## Interface: 70000
 ## Author: MrTheSoulz
 
+config.lua
 petBot.lua
