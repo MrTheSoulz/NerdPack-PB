@@ -1,6 +1,7 @@
 local n_name, pB = ...
+local NeP = NeP
 pB.Version = 1
-local Fetch = NeP.Interface.fetchKey
+local F = function(key, default) return NeP.Interface:Fetch(name, key, default or false) end
 local C_PB = C_PetBattles
 local C_PJ = C_PetJournal
 local isRunning = false
@@ -20,35 +21,35 @@ local config = {
 	config = {
 		{ type = 'header', text = "Settings:", size = 25, align = "Center"},
 		{ type = 'spacer' },
-			{ type = "spinner", text = "Change Pet at Health %:", key = "swapHealth", width = 70, min = 10, max = 100, default = 25, step = 1 },
-			{ type = "checkbox", text = "Auto Trap", key = "trap", default = false },
-			{ type = "checkbox", text = "Only use favorite pets", key = "favorites", default = false },
-			{ type = "dropdown", text = "Team type:", key = "teamtype", list = {
-				{ text = "Battle Team", key = "BattleTeam" },
-				{ text = "Leveling Team", key = "LvlngTeam" },
-			}, default = "BattleTeam" },
+		{ type = "spinner", text = "Change Pet at Health %:", key = "swapHealth", width = 70, min = 10, max = 100, default = 25, step = 1 },
+		{ type = "checkbox", text = "Auto Trap", key = "trap", default = false },
+		{ type = "checkbox", text = "Only use favorite pets", key = "favorites", default = false },
+		{ type = "dropdown", text = "Team type:", key = "teamtype", list = {
+			{ text = "Battle Team", key = "BattleTeam" },
+			{ text = "Leveling Team", key = "LvlngTeam" },
+		}, default = "BattleTeam" },
 		{ type = 'rule' },{ type = 'spacer' },
 		{ type = 'header', text = "Status:", size = 25, align = "Center"},
 		{ type = 'spacer' },
-			-- Pet Slot 1
-			{ type = "text", text = "Pet in slot 1: ", size = 11, offset = -11 },
-			{ key = 'petslot1', type = "text", text = "...", size = 11, align = "right", offset = 0 },
-			-- Pet Slot 2
-			{ type = "text", text = "Pet in slot 2: ", size = 11, offset = -11 },
-			{ key = 'petslot2', type = "text", text = "...", size = 11, align = "right", offset = 0 },
-			-- Pet Slot 3
-			{ type = "text", text = "Pet in slot 3: ", size = 11, offset = -11 },
-			{ key = 'petslot3', type = "text", text = "...", size = 11, align = "right", offset = 0 },
-			{ type = 'spacer' },
-			-- Last attack
-			{ type = "text", text = "Last Used Attack: ", size = 11, offset = -11 },
-			{ key = 'lastAttack', type = "text", text = "...", size = 11, align = "right", offset = 0 },
+		-- Pet Slot 1
+		{ type = "text", text = "Pet in slot 1: ", size = 11, offset = -11 },
+		{ key = 'petslot1', type = "text", text = "...", size = 11, align = "right", offset = 0 },
+		-- Pet Slot 2
+		{ type = "text", text = "Pet in slot 2: ", size = 11, offset = -11 },
+		{ key = 'petslot2', type = "text", text = "...", size = 11, align = "right", offset = 0 },
+		-- Pet Slot 3
+		{ type = "text", text = "Pet in slot 3: ", size = 11, offset = -11 },
+		{ key = 'petslot3', type = "text", text = "...", size = 11, align = "right", offset = 0 },
+		{ type = 'spacer' },
+		-- Last attack
+		{ type = "text", text = "Last Used Attack: ", size = 11, offset = -11 },
+		{ key = 'lastAttack', type = "text", text = "...", size = 11, align = "right", offset = 0 },
 		{ type = 'spacer' },{ type = 'rule' },{ type = 'spacer' },
-			{ type = "button", text = "Start", width = 225, height = 20,callback = function(self, button)
-					isRunning = not isRunning
-						self:SetText(isRunning and "Stop" or "Start")
-				end
-			},
+		{ type = "button", text = "Start", width = 225, height = 20, callback = function(self, button)
+				isRunning = not isRunning
+				self:SetText(isRunning and "Stop" or "Start")
+			end
+		},
 	}	
 }
 
@@ -70,7 +71,7 @@ local function scanJournal()
 		local guid, id, _, _, lvl, _ , _, name, icon = C_PJ.GetPetInfoByIndex(i)
 		local health, maxHealth, attack, speed, rarity = C_PJ.GetPetStats(guid)
 		local healthPercentage = math.floor((health / maxHealth) * 100)
-		if healthPercentage > tonumber(Fetch('NePpetBot', 'swapHealth')) then
+		if healthPercentage > tonumber(F('swapHealth')) then
 			petTable[#petTable+1]={
 				guid = guid,
 				lvl = lvl,
@@ -78,8 +79,8 @@ local function scanJournal()
 			}
 		end
 	end
-	if petTable[1] ~= nil then
-		if Fetch('NePpetBot', 'teamtype') == 'BattleTeam' then
+	if petTable[1] then
+		if F('teamtype') == 'BattleTeam' then
 			table.sort(petTable, function(a,b) return a.attack > b.attack end)
 		else
 			table.sort(petTable, function(a,b) return a.lvl > b.lvl end)
@@ -107,15 +108,15 @@ local function scanLoadOut()
 end
 
 local function buildBattleTeam()
-	if Fetch('NePpetBot', 'teamtype') == 'BattleTeam' then
+	if F('teamtype') == 'BattleTeam' then
 		local petTable = scanJournal()
 		for i=1,#petTable do
 			if #petTable > 0 and not C_PJ.PetIsSlotted(petTable[i].guid) then
 				local loadOut = scanLoadOut()
 				for k=1,#loadOut do
 					if loadOut[k].level < maxPetLvl then
-						if loadOut[k].level < maxPetLvl or loadOut[k].health < tonumber(Fetch('NePpetBot', 'swapHealth')) 
-						or not C_PJ.PetIsFavorite(loadOut[k].id) and Fetch('NePpetBot', 'favorites')
+						if loadOut[k].level < maxPetLvl or loadOut[k].health < tonumber(F('swapHealth')) 
+						or not C_PJ.PetIsFavorite(loadOut[k].id) and F('favorites')
 						or loadOut[k].attack < petTable[i].attack then
 							C_PJ.SetPetLoadOutInfo(k, petTable[i].guid)
 							break
@@ -128,15 +129,15 @@ local function buildBattleTeam()
 end
 
 local function buildLevelingTeam()
-	if Fetch('NePpetBot', 'teamtype') == 'LvlngTeam' then
+	if F('teamtype') == 'LvlngTeam' then
 		local petTable = scanJournal()
 		for i=1,#petTable do
 			if #petTable > 0 and not C_PJ.PetIsSlotted(petTable[i].guid) then
 				local loadOut = scanLoadOut()
 				for k=1,#loadOut do
 					if loadOut[k].level >= maxPetLvl then
-						if loadOut[k].level >= maxPetLvl or loadOut[k].health < tonumber(Fetch('NePpetBot', 'swapHealth')) 
-						or not C_PJ.PetIsFavorite(loadOut[k].id) and Fetch('NePpetBot', 'favorites') then
+						if loadOut[k].level >= maxPetLvl or loadOut[k].health < tonumber(F('swapHealth')) 
+						or not C_PJ.PetIsFavorite(loadOut[k].id) and F('favorites') then
 							C_PJ.SetPetLoadOutInfo(k, petTable[i].guid)
 							break
 						end
@@ -152,7 +153,7 @@ local function scanGroup()
 	local goodPets = {}
 	for k=1,petAmount do
 		local health = getPetHealth(1, k)
-		if health > tonumber(Fetch('NePpetBot', 'swapHealth')) then
+		if health > tonumber(F('swapHealth')) then
 			goodPets[#goodPets+1] = {
 				id = k,
 				health = health
@@ -170,7 +171,7 @@ local function PetSwap()
 		C_PB.ForfeitGame()
 	else
 		for i=1,#goodPets do
-			if getPetHealth(1, activePet) <= tonumber(Fetch('NePpetBot', 'swapHealth')) then
+			if getPetHealth(1, activePet) <= tonumber(F('swapHealth')) then
 				C_PB.ChangePet(goodPets[i].id)
 				break
 			end
@@ -204,12 +205,12 @@ local function scanPetAbilitys()
 	return Abilitys
 end
 
-local _lastAttack = '...'
+local _lastAttack = ''
 local function PetAttack()
 	local Abilitys = scanPetAbilitys()
 	for i=1,#Abilitys do
 		if #Abilitys > 1 and _lastAttack ~= Abilitys[i].name or #Abilitys <=1 then
-			if Abilitys[i] ~= nil then
+			if Abilitys[i] then
 				_lastAttack = Abilitys[i].name
 				petBotGUI.elements.lastAttack:SetText('|T'..Abilitys[i].icon..':10:10|t'..Abilitys[i].name)
 				C_PB.UseAbility(Abilitys[i].id)
@@ -223,29 +224,24 @@ C_Timer.NewTicker(0.5, (function()
 	if pB.GUI:IsShown() then
 		local activePet = C_PB.GetActivePet(1)
 		local enemieActivePet = C_PB.GetActivePet(2)
-		
-		-- Pet 1
-		local petID, petSpellID_slot1, petSpellID_slot2, petSpellID_slot3, locked = C_PJ.GetPetLoadOutInfo(1)
-		local _,_, level, _,_,_,_, petName, petIcon, petType, _,_,_,_, canBattle = C_PJ.GetPetInfoByPetID(petID)
-		petBotGUI.elements.petslot1:SetText('|T'..petIcon..':10:10|t'..petName)
 
-		-- Pet 2
-		local petID, petSpellID_slot1, petSpellID_slot2, petSpellID_slot3, locked = C_PJ.GetPetLoadOutInfo(2)
-		local _,_, level, _,_,_,_, petName, petIcon, petType, _,_,_,_, canBattle = C_PJ.GetPetInfoByPetID(petID)
-		petBotGUI.elements.petslot2:SetText('|T'..petIcon..':10:10|t'..petName)
+		-- Pet 1 to 3
+		for i=1, 3 do
+			local _,_,_,_,_,_,_, petName, petIcon = C_PJ.GetPetInfoByPetID(C_PJ.GetPetLoadOutInfo(1))
+			pB.elements["petslot"..i]:SetText('|T'..petIcon..':10:10|t'..petName)
+		end
 
-		-- Pet 3
-		local petID, petSpellID_slot1, petSpellID_slot2, petSpellID_slot3, locked = C_PJ.GetPetLoadOutInfo(3)
-		local _,_, level, _,_,_,_, petName, petIcon, petType, _,_,_,_, canBattle = C_PJ.GetPetInfoByPetID(petID)
-		petBotGUI.elements.petslot3:SetText('|T'..petIcon..':10:10|t'..petName)
-
-		if isRunning and not C_PB.IsWaitingOnOpponent() then
+		if isRunning
+		and not C_PB.IsWaitingOnOpponent() then
 			if not C_PB.IsInBattle() then
 				buildBattleTeam()
 				buildLevelingTeam()
 			else
 				-- Trap
-				if getPetHealth(2, enemieActivePet) <= 35 and Fetch('NePpetBot', 'trap') and C_PB.IsWildBattle() and C_PB.IsTrapAvailable() then
+				if getPetHealth(2, enemieActivePet) <= 35
+				and F('trap')
+				and C_PB.IsWildBattle()
+				and C_PB.IsTrapAvailable() then
 					C_PB.UseTrap()
 				-- Swap
 				elseif not PetSwap() then
@@ -255,5 +251,6 @@ C_Timer.NewTicker(0.5, (function()
 				end
 			end
 		end
+
 	end
 end), nil)
