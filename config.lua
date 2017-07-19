@@ -1,4 +1,5 @@
 local n_name, pB = ...
+pB.Version = 1
 
 local config = {
 	key = n_name,

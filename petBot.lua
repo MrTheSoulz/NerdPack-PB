@@ -1,9 +1,9 @@
 local n_name, pB = ...
 local NeP = NeP
-pB.Version = 1
 local F = function(key, default) return NeP.Interface:Fetch(name, key, default or false) end
 local C_PB = C_PetBattles
 local C_PJ = C_PetJournal
+local C_Timer = C_Timer
 local isRunning = false
 local maxPetLvl = 0
 
@@ -13,10 +13,10 @@ end
 
 local function scanJournal()
 	local petTable = {}
-	local maxAmount, petAmount = C_PJ.GetNumPets()
+	local _, petAmount = C_PJ.GetNumPets()
 	for i=1,petAmount do
-		local guid, id, _, _, lvl, _ , _, name, icon = C_PJ.GetPetInfoByIndex(i)
-		local health, maxHealth, attack, speed, rarity = C_PJ.GetPetStats(guid)
+		local guid, _, _, _, lvl, _ , _, _, _ = C_PJ.GetPetInfoByIndex(i)
+		local health, maxHealth, attack = C_PJ.GetPetStats(guid)
 		local healthPercentage = math.floor((health / maxHealth) * 100)
 		if healthPercentage > tonumber(F('swapHealth')) then
 			petTable[#petTable+1]={
@@ -40,9 +40,9 @@ end
 local function scanLoadOut()
 	local loadOut = {}
 	for k=1,3 do
-		local petID, petSpellID_slot1, petSpellID_slot2, petSpellID_slot3, locked = C_PJ.GetPetLoadOutInfo(k)
-		local _,_, level, _,_,_,_, petName, petIcon, petType, _,_,_,_, canBattle = C_PJ.GetPetInfoByPetID(petID)
-		local health, maxHealth, attack, speed, rarity = C_PJ.GetPetStats(petID)
+		local petID = C_PJ.GetPetLoadOutInfo(k)
+		local _,_, level = C_PJ.GetPetInfoByPetID(petID)
+		local health, maxHealth, attack = C_PJ.GetPetStats(petID)
 		local healthPercentage = math.floor((health / maxHealth) * 100)
 		loadOut[#loadOut+1] = {
 			health = healthPercentage,
@@ -62,7 +62,7 @@ local function buildBattleTeam()
 				local loadOut = scanLoadOut()
 				for k=1,#loadOut do
 					if loadOut[k].level < maxPetLvl then
-						if loadOut[k].level < maxPetLvl or loadOut[k].health < tonumber(F('swapHealth')) 
+						if loadOut[k].level < maxPetLvl or loadOut[k].health < tonumber(F('swapHealth'))
 						or not C_PJ.PetIsFavorite(loadOut[k].id) and F('favorites')
 						or loadOut[k].attack < petTable[i].attack then
 							C_PJ.SetPetLoadOutInfo(k, petTable[i].guid)
@@ -83,7 +83,7 @@ local function buildLevelingTeam()
 				local loadOut = scanLoadOut()
 				for k=1,#loadOut do
 					if loadOut[k].level >= maxPetLvl then
-						if loadOut[k].level >= maxPetLvl or loadOut[k].health < tonumber(F('swapHealth')) 
+						if loadOut[k].level >= maxPetLvl or loadOut[k].health < tonumber(F('swapHealth'))
 						or not C_PJ.PetIsFavorite(loadOut[k].id) and F('favorites') then
 							C_PJ.SetPetLoadOutInfo(k, petTable[i].guid)
 							break
@@ -132,9 +132,9 @@ local function scanPetAbilitys()
 	local activePet = C_PB.GetActivePet(1)
 	local enemieActivePet = C_PB.GetActivePet(2)
 	for i=3,1,-1 do
-		local isUsable, currentCooldown = C_PB.GetAbilityState(1, activePet, i)
+		local isUsable = C_PB.GetAbilityState(1, activePet, i)
 		if isUsable then
-			local id, name, icon, maxcooldown, desc, numTurns, abilityPetType, nostrongweak = C_PB.GetAbilityInfo(1, activePet, i)
+			local _, name, icon, _,_,_, abilityPetType = C_PB.GetAbilityInfo(1, activePet, i)
 			local enemieType = C_PB.GetPetType(2, enemieActivePet)
 			local attackModifer = C_PB.GetAttackModifier(abilityPetType, enemieType)
 			local power = C_PB.GetPower(1, activePet)
@@ -159,7 +159,7 @@ local function PetAttack()
 		if #Abilitys > 1 and _lastAttack ~= Abilitys[i].name or #Abilitys <=1 then
 			if Abilitys[i] then
 				_lastAttack = Abilitys[i].name
-				petBotGUI.elements.lastAttack:SetText('|T'..Abilitys[i].icon..':10:10|t'..Abilitys[i].name)
+				pB.GUI.elements.lastAttack:SetText('|T'..Abilitys[i].icon..':10:10|t'..Abilitys[i].name)
 				C_PB.UseAbility(Abilitys[i].id)
 			end
 		end
@@ -169,7 +169,6 @@ end
 
 C_Timer.NewTicker(0.5, (function()
 	if pB.GUI:IsShown() then
-		local activePet = C_PB.GetActivePet(1)
 		local enemieActivePet = C_PB.GetActivePet(2)
 
 		-- Pet 1 to 3
