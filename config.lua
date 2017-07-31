@@ -39,10 +39,10 @@ local config = {
 				self:SetText(isRunning and "Stop" or "Start")
 			end
 		},
-	}	
+	}
 }
 
 -- Create the GUI and add it to NeP
 pB.GUI = NeP.Interface:BuildGUI(config)
-NeP.Interface:Add(n_name..' V:'..pB.Version, function() pB.GUI:Show() end)
-pB.GUI:Hide()
+NeP.Interface:Add(n_name..' V:'..pB.Version, function() pB.GUI.parent:Show() end)
+pB.GUI.parent:Hide()

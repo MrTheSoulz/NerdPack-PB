@@ -159,7 +159,7 @@ local function PetAttack()
 		if #Abilitys > 1 and _lastAttack ~= Abilitys[i].name or #Abilitys <=1 then
 			if Abilitys[i] then
 				_lastAttack = Abilitys[i].name
-				pB.GUI.elements.lastAttack:SetText('|T'..Abilitys[i].icon..':10:10|t'..Abilitys[i].name)
+				pB.GUI.elements["lastAttack"].parent:SetText('|T'..Abilitys[i].icon..':10:10|t'..Abilitys[i].name)
 				C_PB.UseAbility(Abilitys[i].id)
 			end
 		end
@@ -168,13 +168,13 @@ local function PetAttack()
 end
 
 C_Timer.NewTicker(0.5, (function()
-	if pB.GUI:IsShown() then
+	if pB.GUI.parent:IsShown() then
 		local enemieActivePet = C_PB.GetActivePet(2)
 
 		-- Pet 1 to 3
 		for i=1, 3 do
 			local _,_,_,_,_,_,_, petName, petIcon = C_PJ.GetPetInfoByPetID(C_PJ.GetPetLoadOutInfo(1))
-			pB.elements["petslot"..i]:SetText('|T'..petIcon..':10:10|t'..petName)
+			pB.GUI.elements["petslot"..i].parent:SetText('|T'..petIcon..':10:10|t'..petName)
 		end
 
 		if isRunning
